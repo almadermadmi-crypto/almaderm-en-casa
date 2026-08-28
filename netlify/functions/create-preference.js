@@ -64,11 +64,7 @@ exports.handler = async (event) => {
         failure: process.env.SITE_URL + '/pago-fallido',
         pending: process.env.SITE_URL + '/pago-pendiente'
       },
-      auto_return: 'approved',
-      payment_methods: {
-        installments: 1,
-        default_installments: 1
-      }
+      auto_return: 'approved'
     };
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
