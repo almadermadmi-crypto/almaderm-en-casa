@@ -60,6 +60,19 @@
     letter-spacing: 0.02em;
   }
   .wordmark span{ color: var(--dorado-deep); font-style: italic; font-weight: 500; }
+    
+  .thankyou-banner{
+    background: var(--dorado);
+    color: var(--carbon);
+    text-align: center;
+    padding: 14px 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    display: none;
+  }
+  .thankyou-banner.show{ display: block; }
+  .thankyou-banner span{ font-weight: 400; }
 
   .topbar-actions{ display:flex; align-items:center; gap:10px; }
 
@@ -793,6 +806,9 @@
 </style>
 </head>
 <body>
+  <div class="thankyou-banner" id="thankyouBanner">
+    🎉 ¡Gracias por tu compra! <span>Tu pago fue confirmado y ya estamos preparando tu pedido.</span>
+  </div>  
 
   <div class="topbar">
     <div class="wordmark">ALMADERM <span>En Casa</span></div>
@@ -1382,6 +1398,16 @@
     document.getElementById('trackOrderNumber').value = orderNumber;
     renderTimeline(orderNumber, currentIndex);
   }
+    (function checkPaymentStatus(){
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status') || params.get('collection_status');
+    if(status === 'approved'){
+      document.getElementById('thankyouBanner').classList.add('show');
+    }
+    if(params.has('status') || params.has('collection_status') || params.has('payment_id')){
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  })();
 </script>
 
 </body>
