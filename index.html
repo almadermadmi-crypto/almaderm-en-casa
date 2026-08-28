@@ -1277,8 +1277,7 @@
       const dateStr = today.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
       myOrders.unshift({ number: orderNumber, date: dateStr, statusIndex: 0, total: subtotal + shipping });
 
-      // Como son credenciales de PRUEBA, usamos el link de sandbox si viene disponible.
-      window.location.href = data.sandbox_init_point || data.init_point;
+      window.location.href = data.init_point;
 
     } catch (err) {
       body.innerHTML = `
