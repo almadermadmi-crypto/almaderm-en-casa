@@ -60,9 +60,9 @@ exports.handler = async (event) => {
       items: mpItems,
       payer: payer_email ? { email: payer_email } : undefined,
       back_urls: {
-        success: process.env.SITE_URL + '/gracias',
-        failure: process.env.SITE_URL + '/pago-fallido',
-        pending: process.env.SITE_URL + '/pago-pendiente'
+        success: process.env.SITE_URL + '/',
+        failure: process.env.SITE_URL + '/',
+        pending: process.env.SITE_URL + '/'
       },
       auto_return: 'approved',
       payment_methods: {
