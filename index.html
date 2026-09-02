@@ -73,6 +73,16 @@
   }
   .thankyou-banner.show{ display: block; }
   .thankyou-banner span{ font-weight: 400; }
+    .free-shipping-bar{
+    background: var(--carbon);
+    color: var(--crema);
+    text-align: center;
+    padding: 10px 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+  }
 
   .topbar-actions{ display:flex; align-items:center; gap:10px; }
 
@@ -806,6 +816,9 @@
 </style>
 </head>
 <body>
+    <div class="free-shipping-bar">
+    Envío gratis al llevar 2 productos · Productos originales · Pago seguro
+  </div>
   <div class="thankyou-banner" id="thankyouBanner">
     🎉 ¡Gracias por tu compra! <span>Tu pago fue confirmado y ya estamos preparando tu pedido.</span>
   </div>  
@@ -842,6 +855,7 @@
           <h3>Crema Haenkenium</h3>
           <p class="desc">Combinación de ácido hialurónico de alto y bajo peso molecular con extracto de Salvia Haenkei que actúa como escudo antioxidante diario, protegiendo la piel del estrés oxidativo antes de que se note el daño. Se usa en tu rutina de día y noche, y también se recomienda como complemento en la etapa de recuperación después de un tratamiento dermocosmético.</p>
           <p class="card-meta">Rostro · cuello · escote — 50 ml</p>
+          <p class="shipping-hint">Lleva 2 productos y recibe envío gratis</p>
           <div class="card-footer">
             <span class="price-tag">$1,300 MXN</span>
             <button class="add-btn" onclick="addItem('Crema Haenkenium', 1300)">Agregar</button>
@@ -856,6 +870,7 @@
           <h3>Cover Up — Dark</h3>
           <p class="desc">Uno de los pocos maquillajes estériles que sí pueden usarse justo después de tratamientos dermoestéticos como rellenos, láser o peeling, gracias a su fórmula con árnica montana y ácido hialurónico de bajo peso molecular que cubre enrojecimientos y hematomas. No aplicar sobre piel lesionada o heridas sin cicatrizar; sigue las indicaciones de tu profesional tratante.</p>
           <p class="card-meta">Rostro — 20 ml · tono oscuro</p>
+          <p class="shipping-hint">Lleva 2 productos y recibe envío gratis</p>
           <div class="card-footer">
             <span class="price-tag">$1,400 MXN</span>
             <button class="add-btn" onclick="addItem('Cover Up Dark', 1400)">Agregar</button>
@@ -870,6 +885,7 @@
           <h3>Cover Up — Light</h3>
           <p class="desc">Uno de los pocos maquillajes estériles que sí pueden usarse justo después de tratamientos dermoestéticos como rellenos, láser o peeling, gracias a su fórmula con árnica montana y ácido hialurónico de bajo peso molecular que cubre enrojecimientos y hematomas. No aplicar sobre piel lesionada o heridas sin cicatrizar; sigue las indicaciones de tu profesional tratante.</p>
           <p class="card-meta">Rostro — 20 ml · tono claro</p>
+          <p class="shipping-hint">Lleva 2 productos y recibe envío gratis</p>
           <div class="card-footer">
             <span class="price-tag">$1,400 MXN</span>
             <button class="add-btn" onclick="addItem('Cover Up Light', 1400)">Agregar</button>
@@ -893,7 +909,7 @@
   <section class="about">
     <div class="about-inner">
       <div class="eyebrow">Quiénes somos</div>
-      <h2>La misma casa que confían los especialistas.</h2>
+      <h2>La misma casa en la que confían los especialistas.</h2>
       <div class="about-divider"></div>
       <p class="lead">Distribuidora Almaderm trabaja con médicos especialistas en el norte de México — dermatólogos, cirujanos plásticos y médicos estéticos — llevándoles marcas de grado clínico en las que confían para sus tratamientos. Almaderm En Casa nace para llevar esa misma calidad directo a tu rutina personal, sin intermediarios.</p>
       <div class="mv-grid">
@@ -911,6 +927,11 @@
 
   <footer>
     <p class="brand-line">Distribuidora Almaderm — la misma casa que surte a dermatólogos y médicos estéticos en el norte del país, ahora directo a ti.</p>
+        <div class="foot-meta">
+      <p><b>Distribuidora Almaderm, S.A. de C.V.</b></p>
+      <p>Correo de atención: almadermadmi@gmail.com</p>
+      <p>Horario de atención: Lunes a viernes 9:00 am – 6:30 pm · Sábados 9:30 am – 1:00 pm · Domingos cerrado</p>
+    </div>
   </footer>
 
   <button class="faq-float" onclick="toggleFaq(true)" aria-label="Preguntas frecuentes">
@@ -937,6 +958,7 @@
       <button class="close-btn" onclick="toggleCart(false)">✕</button>
     </div>
     <button class="continue-shopping" onclick="toggleCart(false)">← Seguir comprando</button>
+    <p id="shippingMsg" style="padding: 0 24px; font-size: 0.76rem; color: var(--dorado-deep); font-weight: 600;"></p>
     <div class="drawer-items" id="drawerItems">
       <p class="drawer-empty">Tu carrito está vacío</p>
     </div>
@@ -1157,6 +1179,17 @@
     if(subtotalEl){
       subtotalEl.textContent = entries.length ? `Subtotal: $${subtotal.toLocaleString('es-MX')} MXN` : '';
     }
+   
+    const shippingMsgEl = document.getElementById('shippingMsg');
+    if(shippingMsgEl){
+      if(totalQty === 0){
+        shippingMsgEl.textContent = '';
+      } else if(totalQty === 1){
+        shippingMsgEl.textContent = 'Agrega un producto más y obtén envío gratis 🎉';
+      } else {
+        shippingMsgEl.textContent = '¡Tu pedido ya tiene envío gratis! 🎉';
+      }
+    } 
   }
 
   function toggleCart(open){
