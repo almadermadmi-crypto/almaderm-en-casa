@@ -1326,6 +1326,7 @@
       const dateStr = today.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
       myOrders.unshift({ number: orderNumber, date: dateStr, statusIndex: 0, total: subtotal + shipping });
 
+      localStorage.setItem('almadermFolioPendiente', data.folio);
       window.location.href = data.init_point;
 
     } catch (err) {
@@ -1431,16 +1432,36 @@
     document.getElementById('trackOrderNumber').value = orderNumber;
     renderTimeline(orderNumber, currentIndex);
   }
-    (function checkPaymentStatus(){
+   (function checkPaymentStatus(){
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status') || params.get('collection_status');
     if(status === 'approved'){
-      document.getElementById('thankyouBanner').classList.add('show');
+      const folio = localStorage.getItem('almadermFolioPendiente');
+      const banner = document.getElementById('thankyouBanner');
+      if(folio){
+        banner.innerHTML = `🎉 ¡Gracias por tu compra! <span>Tu número de pedido es <b>${folio}</b>.</span> ` +
+          `<button class="track-link" style="color:inherit;margin-left:8px;" onclick="copyFolio('${folio}')">Copiar folio</button> ` +
+          `<button class="track-link" style="color:inherit;margin-left:8px;" onclick="verMiPedido('${folio}')">Rastrear mi pedido</button>`;
+        localStorage.removeItem('almadermFolioPendiente');
+      } else {
+        banner.innerHTML = '🎉 ¡Gracias por tu compra! <span>Tu pago fue confirmado y ya estamos preparando tu pedido.</span>';
+      }
+      banner.classList.add('show');
     }
     if(params.has('status') || params.has('collection_status') || params.has('payment_id')){
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   })();
+
+  function copyFolio(folio){
+    navigator.clipboard.writeText(folio);
+    alert('Folio copiado: ' + folio);
+  }
+
+  function verMiPedido(folio){
+    openTracking();
+    document.getElementById('trackOrderNumber').value = folio;
+  }
 </script>
 
 </body>
