@@ -826,7 +826,7 @@
   <div class="topbar">
     <div class="wordmark">ALMADERM <span>En Casa</span></div>
     <div class="topbar-actions">
-      <button class="orders-btn" onclick="openMyOrders()">Mis pedidos</button>
+      <button class="orders-btn" onclick="openTracking()">Mis pedidos</button>
       <button class="cart-btn" onclick="toggleCart(true)">
         Carrito <span class="cart-count" id="cartCount">0</span>
       </button>
@@ -993,7 +993,7 @@
             <input type="tel" id="phone" placeholder="81 0000 0000">
           </div>
           <div class="form-group">
-            <label>Correo</label>
+            <label>Correo (para consultar tu pedido)</label>
             <input type="email" id="email" placeholder="tu@correo.com">
           </div>
         </div>
@@ -1296,6 +1296,11 @@
     const body = document.getElementById('checkoutBody');
     const name = document.getElementById('fullName').value || 'ahí';
     const email = document.getElementById('email').value;
+        if(!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())){
+      alert('Escribe un correo válido: lo necesitamos para que puedas consultar tu pedido.');
+      return;
+    }
+    localStorage.setItem('almadermEmailPedido', email.trim());
     const subtotal = getSubtotal();
     const shipping = calculateShipping() || 0;
 
@@ -1462,6 +1467,116 @@
   function verMiPedido(folio){
     openTracking();
     document.getElementById('trackOrderNumber').value = folio;
+  }
+  
+  // ===== Consulta real de pedidos (reemplaza la simulación anterior) =====
+  function escaparHtml(texto){
+    return String(texto == null ? '' : texto)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function openTracking(){
+    const emailGuardado = localStorage.getItem('almadermEmailPedido');
+    const campoEmail = document.getElementById('trackEmail');
+    if(emailGuardado && campoEmail && !campoEmail.value){
+      campoEmail.value = emailGuardado;
+    }
+    document.getElementById('trackResult').classList.remove('show');
+    document.getElementById('trackingOverlay').classList.add('open');
+  }
+
+  async function searchOrder(){
+    const folio = document.getElementById('trackOrderNumber').value.trim();
+    const email = document.getElementById('trackEmail').value.trim();
+    const resultado = document.getElementById('trackResult');
+    const boton = document.querySelector('.track-search-btn');
+
+    if(!folio || !email){
+      alert('Escribe tu número de pedido y el correo con el que compraste.');
+      return;
+    }
+
+    boton.disabled = true;
+    boton.textContent = 'Buscando...';
+
+    try{
+      const res = await fetch('/.netlify/functions/consultar-pedido', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folio, email })
+      });
+      const data = await res.json();
+
+      if(!data.encontrado){
+        resultado.innerHTML = '<p class="track-meta">No encontramos un pedido con ese número y correo. Revisa que estén escritos igual que en tu confirmación.</p>';
+        resultado.classList.add('show');
+        return;
+      }
+
+      const folioSeguro = escaparHtml(data.folio);
+      const estado = String(data.estado || '').toLowerCase();
+
+      if(estado.includes('pendiente')){
+        resultado.innerHTML = '<p class="track-meta">Pedido <b>' + folioSeguro + '</b></p>' +
+          '<p class="track-meta">Todavía no recibimos la confirmación de tu pago. Si ya pagaste, puede tardar unos minutos en reflejarse. Vuelve a consultar en un momento.</p>';
+        resultado.classList.add('show');
+        return;
+      }
+
+      let indice = 1;
+      if(estado.includes('envi') || (data.guia && data.paqueteria)) indice = 2;
+      if(estado.includes('entreg')) indice = 3;
+
+      let detalleEnvio = '';
+      if(indice >= 2 && data.paqueteria){
+        detalleEnvio = escaparHtml(data.paqueteria);
+        if(data.guia) detalleEnvio += ' · Guía: ' + escaparHtml(data.guia);
+        if(data.link){
+          detalleEnvio += '<br><a href="' + escaparHtml(data.link) + '" target="_blank" rel="noopener" style="color:var(--dorado-deep);font-weight:600;">Rastrear en la paquetería</a>';
+          if(String(data.paqueteria).toLowerCase().includes('sendex')){
+            detalleEnvio += '<br>En esa página pega tu número de guía.';
+          }
+        }
+      }
+
+      const pasos = [
+        { label: 'Pedido recibido', detalle: escaparHtml(data.fecha || '') },
+        { label: 'Preparando tu pedido', detalle: '' },
+        { label: 'Enviado', detalle: detalleEnvio },
+        { label: 'Entregado', detalle: '' }
+      ];
+
+      const pasosHtml = pasos.map((p, i) => `
+        <div class="timeline-step ${i <= indice ? 'done' : ''}">
+          <div class="timeline-dot"></div>
+          <div class="timeline-text">
+            <div class="label">${p.label}</div>
+            ${p.detalle ? `<div class="date">${p.detalle}</div>` : ''}
+          </div>
+        </div>`).join('');
+
+      resultado.innerHTML = '<p class="track-meta">Pedido <b>' + folioSeguro + '</b></p>' +
+        '<div class="timeline">' + pasosHtml + '</div>';
+      resultado.classList.add('show');
+
+    } catch (err) {
+      resultado.innerHTML = '<p class="track-meta">No pudimos consultar tu pedido en este momento. Intenta de nuevo en unos minutos o escríbenos por WhatsApp.</p>';
+      resultado.classList.add('show');
+    } finally {
+      boton.disabled = false;
+      boton.textContent = 'Buscar pedido';
+    }
+  }
+
+  function verMiPedido(folio){
+    openTracking();
+    document.getElementById('trackOrderNumber').value = folio;
+    const emailGuardado = localStorage.getItem('almadermEmailPedido');
+    if(emailGuardado){
+      document.getElementById('trackEmail').value = emailGuardado;
+      searchOrder();
+    }
   }
 </script>
 
