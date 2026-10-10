@@ -931,6 +931,14 @@
         <div class="foot-meta">
       <p><b>Distribuidora Almaderm, S.A. de C.V.</b></p>
       <p>Correo de atención: almadermadmi@gmail.com</p>
+              <p>Domicilio: José Alvarado 2556, colonia Villa Florida, Monterrey, Nuevo León, C.P. 64810</p>
+      <p>Teléfono: 81 2200 4518</p>
+      <p style="margin-top:10px;">
+        <a href="/aviso-privacidad.html" style="margin-right:18px;text-decoration:underline;">Aviso de privacidad</a>
+        <a href="/terminos.html" style="margin-right:18px;text-decoration:underline;">Términos y condiciones</a>
+        <a href="/envios.html" style="margin-right:18px;text-decoration:underline;">Envíos</a>
+        <a href="/devoluciones.html" style="text-decoration:underline;">Devoluciones</a>
+      </p>  
       <p>Horario de atención: Lunes a viernes 9:00 am – 6:30 pm · Sábados 9:30 am – 1:00 pm · Domingos cerrado</p>
     </div>
   </footer>
@@ -1059,6 +1067,15 @@
 
         <div class="form-section-title">Resumen del pedido</div>
         <div class="order-summary" id="orderSummary"></div>
+        
+        <div class="form-section-title">Promociones</div>
+        <p id="promoLabel" style="font-size:0.85rem;margin-bottom:10px;">¿Quieres recibir promociones y novedades de Almaderm En Casa por correo?</p>
+        <div role="radiogroup" aria-labelledby="promoLabel" style="display:flex;gap:26px;margin-bottom:6px;">
+          <label style="font-size:0.85rem;display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="promo" value="Sí" onchange="document.getElementById('promoError').style.display='none'"> Sí</label>
+          <label style="font-size:0.85rem;display:flex;align-items:center;gap:8px;cursor:pointer;"><input type="radio" name="promo" value="No" onchange="document.getElementById('promoError').style.display='none'"> No</label>
+        </div>
+        <p id="promoError" style="display:none;color:#A0452E;font-size:0.76rem;margin-bottom:10px;">Elige Sí o No para continuar.</p>
+        <p style="font-size:0.72rem;color:var(--carbon-muted);line-height:1.6;margin-top:16px;">Distribuidora Almaderm, S.A. de C.V., con domicilio en José Alvarado 2556, colonia Villa Florida, Monterrey, Nuevo León, C.P. 64810, es responsable de tus datos personales. Los usamos para procesar y enviar tu pedido, emitir factura si la pides y darte seguimiento. Tratamos tu nombre, teléfono, correo y dirección de envío; en este formulario no pedimos datos sensibles. Si eliges Sí en la pregunta sobre promociones, también usaremos tu correo para enviarte promociones. Para limitar el uso o la divulgación de tus datos, escribe a almadermadmi@gmail.com. Consulta el <a href="/aviso-privacidad.html" target="_blank" rel="noopener" style="text-decoration:underline;">aviso de privacidad integral</a>.</p>
 
       </div>
       <div class="checkout-foot">
@@ -1217,7 +1234,7 @@
     },
     {
       q: '¿Puedo cambiar o devolver un producto?',
-      a: 'Estamos definiendo nuestra política de cambios y devoluciones — la verás publicada aquí muy pronto.'
+      a: 'Tienes 5 días hábiles desde que recibes tu pedido para revocar tu compra, y dos meses para reclamar un producto con defecto o error de caducidad. Consulta la <a href="/devoluciones.html" style="color:var(--dorado-deep);text-decoration:underline;">política de devoluciones</a>.'
     }
   ];
 
@@ -1267,6 +1284,7 @@
     summaryEl.innerHTML = `
       <div class="line">Subtotal <span>$${subtotal.toLocaleString('es-MX')} MXN</span></div>
       ${shippingLine}
+            <div class="line">Entrega estimada <span>3 a 5 días hábiles</span></div>
       <div class="line total">Total <span>$${total.toLocaleString('es-MX')} MXN</span></div>
     `;
   }
@@ -1301,6 +1319,12 @@
       return;
     }
     localStorage.setItem('almadermEmailPedido', email.trim());
+        const promoElegida = document.querySelector('input[name="promo"]:checked');
+    if(!promoElegida){
+      document.getElementById('promoError').style.display = 'block';
+      return;
+    }
+    const promo = promoElegida.value;
     const subtotal = getSubtotal();
     const shipping = calculateShipping() || 0;
 
@@ -1318,7 +1342,7 @@
       const res = await fetch('/.netlify/functions/create-preference', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items, shipping, payer_email: email })
+        body: JSON.stringify({ items, shipping, payer_email: email, promociones: promo, aviso: '2026-10-09' })
       });
       const data = await res.json();
 
