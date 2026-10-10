@@ -5,6 +5,9 @@
 // en el mismo Google Sheet que ya usa el bot de WhatsApp, y luego crea la
 // "preferencia de pago" en Mercado Pago, ligada a ese folio.
 //
+// Además guarda como constancia la respuesta del cliente sobre promociones (Sí o No)
+// y la versión del aviso de privacidad que se le mostró.
+//
 // El Access Token NUNCA se pone aquí escrito directamente. Se lee desde una
 // variable de entorno configurada en Netlify (Site settings > Environment variables),
 // con el nombre: MP_ACCESS_TOKEN
@@ -36,12 +39,19 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { items, shipping, payer_email } = JSON.parse(event.body);
+    const { items, shipping, payer_email, promociones, aviso } = JSON.parse(event.body);
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return { statusCode: 400, body: JSON.stringify({ error: 'El carrito está vacío.' }) };
     }
 
+    // Respuesta sobre promociones: solo "Sí" cuenta como consentimiento.
+    // Si llega vacía (por ejemplo, desde una página guardada en caché), se registra como sin respuesta.
+    const respuestaPromo = promociones === 'Sí' ? 'Sí' : (promociones === 'No' ? 'No' : 'Sin respuesta');
+    const versionAviso = aviso ? 'Aviso ' + String(aviso).slice(0, 20) : '';
+
+    // Armamos la lista de items para Mercado Pago. Si hay costo de envío,
+    // lo agregamos como un ítem más (así aparece desglosado para el cliente).
     const mpItems = items.map((item) => ({
       title: item.title,
       quantity: item.quantity,
@@ -62,6 +72,7 @@ exports.handler = async (event) => {
     const total = subtotal + (shipping || 0);
     const productosTexto = items.map(item => `${item.quantity}x ${item.title}`).join(', ');
 
+    // ── Paso 1: generar el folio ANTES de crear el pago ──
     const folioResp = await fetch(GOOGLE_SHEETS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -69,7 +80,9 @@ exports.handler = async (event) => {
         accion: 'crearPedidoPendiente',
         nombre: payer_email || '',
         productos: productosTexto,
-        total: total
+        total: total,
+        promociones: respuestaPromo,
+        aviso: versionAviso
       })
     });
 
@@ -84,6 +97,7 @@ exports.handler = async (event) => {
 
     const folio = folioData.folio;
 
+    // ── Paso 2: crear la preferencia de pago en Mercado Pago, ligada al folio ──
     const preference = {
       items: mpItems,
       payer: payer_email ? { email: payer_email } : undefined,
@@ -119,6 +133,8 @@ exports.handler = async (event) => {
       };
     }
 
+    // Regresamos el folio junto con el link de pago, para que el sitio lo guarde
+    // y se lo pueda mostrar al cliente cuando regrese de pagar.
     return {
       statusCode: 200,
       body: JSON.stringify({
